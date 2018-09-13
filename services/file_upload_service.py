@@ -38,3 +38,11 @@ class File_Upload_Service:
                 file_list.append(path)
 
         return file_list
+
+    @staticmethod
+    def move_all_files():
+        folder = File_Upload_Service.UPLOAD_FOLDER
+        for the_file in os.listdir(folder):
+            file_path = os.path.join(folder, the_file)
+            if os.path.isfile(file_path):
+                File_Upload_Service.move_processed_file(the_file)

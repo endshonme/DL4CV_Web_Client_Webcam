@@ -1,3 +1,10 @@
+
+body {
+   font-weight: bolder;
+    color: darkslateblue;
+}
+
+
 .emotions_list li {
     list-style: none !important;
     margin: 10px 10px 10px 10px;
@@ -23,6 +30,13 @@ ul {
     float: right;
 }
 
+.clr_btn {
+    float: right;
+    position: relative;
+    right: 0;
+    bottom: 0;
+}
+
 .btn {
     margin-top: 15px;
     margin-left: 35%;
@@ -41,7 +55,7 @@ fieldset {
     margin: 20px 20px 20px 20px;
 }
 
-.emotion{
+.emotion {
     color: black;
     padding: 10px 20px;
     text-align: center;

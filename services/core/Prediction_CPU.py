@@ -39,6 +39,6 @@ def Execute():
             test_output = model_p2(Variable(img, volatile=True))
             max_val, idx = torch.max(test_output, 1)
             res.append(dict(image_path=file_path, emotion=emo_list[idx.data.cpu().numpy()[0]]))
-            # file_upload_service.File_Upload_Service.move_processed_file(the_file)
+            file_upload_service.File_Upload_Service.move_processed_file(the_file)
 
     return res

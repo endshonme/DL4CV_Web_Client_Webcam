@@ -8,7 +8,7 @@
     <script type="text/javascript" src="../static/library/js/app.js"></script>
     <link rel="stylesheet" type="text/css" href="../static/library/css/app.css"/>
 </head>
-<body>
+<body background="../static/images/background.jpg">
 <div class="content">
     <div>
         <fieldset>
@@ -24,11 +24,12 @@
 
             </form>
             <fieldset>
-            <legend>Uploaded Pics:</legend>
+                <legend>Uploaded Pics:</legend>
                 <div>
-            <ul class="uploaded_file_list">
-            </ul>
-                    </div>
+                    <ul class="uploaded_file_list">
+                    </ul>
+                    <button id="clear_images" class="clr_btn" type="button" value="Clear Images!" onclick="clear_images()">Clear Images!</button>
+                </div>
             </fieldset>
         </fieldset>
     </div>
