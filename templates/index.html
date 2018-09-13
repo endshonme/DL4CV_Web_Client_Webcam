@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prediction</title>
+    {#    <script type="text/javascript" src="../static/library/js/plotly.min.js"></script>#}
+    <script type="text/javascript" src="../static/library/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../static/library/js/app.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/library/css/app.css"/>
+</head>
+<body>
+<div class="content">
+    <div>
+        <fieldset>
+            <legend>Upload Your Beautiful Pic:</legend>
+            <form action="/upload_files" method="POST" enctype=multipart/form-data class="legend">
+
+                <span>Upload: </span>
+                <input type="file" name="data_file"/><br/>
+                <span>Capture an Image: </span>
+                <input type="file" name="data_file" accept="image/*" capture="camera">
+                <br/>
+                <input class="submit_btn" type="submit" value="Upload Pic!"/>
+
+            </form>
+            <fieldset>
+            <legend>Uploaded Pics:</legend>
+                <div>
+            <ul class="uploaded_file_list">
+            </ul>
+                    </div>
+            </fieldset>
+        </fieldset>
+    </div>
+    <div>
+
+        <button id="fetch_emotion" class="btn" type="button" value="Fetch Emotion!">Fetch Emotion!</button>
+        <ul class="emotions_list">
+        </ul>
+    </div>
+</div>
+</body>
+</html>
