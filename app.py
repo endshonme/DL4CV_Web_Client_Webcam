@@ -1,26 +1,29 @@
 import services.core.Prediction_CPU as prediction
 import services.file_upload_service as file_upload_service
+from services.core.camera import VideoCamera
 from flask import Flask, send_file, render_template, redirect, flash, request, url_for, jsonify, abort, Response
 from json import dumps
 
 app = Flask(__name__)
 
-@app.after_request
-def add_header(r):
-    """
-    Add headers to both force latest IE rendering engine or Chrome Frame,
-    and also to cache the rendered page for 10 minutes.
-    """
-    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    r.headers["Pragma"] = "no-cache"
-    r.headers["Expires"] = "0"
-    r.headers['Cache-Control'] = 'public, max-age=0'
 
-    return r
+# @app.after_request
+# def add_header(r):
+#     """
+#     Add headers to both force latest IE rendering engine or Chrome Frame,
+#     and also to cache the rendered page for 10 minutes.
+#     """
+#     r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+#     r.headers["Pragma"] = "no-cache"
+#     r.headers["Expires"] = "0"
+#     r.headers['Cache-Control'] = 'public, max-age=0'
+#
+#     return r
+
 
 @app.route('/')
 def index():
-    return render_template('index.html', data='Bloomberg Magic!')
+    return render_template('index.html', data='Emotion Detection Web (A DL4CV Project)!')
 
 
 @app.route('/upload_files', methods=['POST'])
@@ -59,5 +62,34 @@ def process():
         abort(Response(error_message, 401))
 
 
+def gen(camera):
+    global video_camera
+    video_camera = camera
+
+    while True:
+        if video_camera.stop_camera:
+            break
+
+        frame = video_camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+    video_camera.stop()
+    print("camera open??==", camera.is_camera_open)
+
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen(VideoCamera()),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/stop', methods=['POST'])
+def stop():
+    global video_camera
+    video_camera.stop_camera = True
+    return jsonify(["Camera has been stopped!!!"])
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
