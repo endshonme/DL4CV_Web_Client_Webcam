@@ -120,25 +120,26 @@ class VideoCamera(object):
                         image = self.cv2.rectangle(image, (x, y - 50), (x + w, y + h + 10), (255, 0, 0), 2)
                         self.cv2.imwrite(self.out_file.format(self.file_), image)
                         self.file_ += 1
+
                         # self.video_writer.write(image)
                     else:
                         print("No face!!!")
-                        self.stop_camera = True
+                        # self.stop_camera = True
                 else:
                     print("No Emotion Prediction!!!.")
-                    self.stop_camera = True
+                    # self.stop_camera = True
             else:
                 print("Some issue in image format!!!")
-                self.stop_camera = True
+                # self.stop_camera = True
         else:
             print("No frame captured from Video!!!")
-            self.stop_camera = True
+            # self.stop_camera = True
 
         try:
             return self.cv2.imencode('.jpg', image)[1].tobytes()
         except Exception as e:
             print("Exception while returning image as byte!!!---> {}".format(e))
-            self.stop_camera = True
+            # self.stop_camera = True
             return bytearray()
 
     def format_image(self, image):
@@ -152,7 +153,130 @@ class VideoCamera(object):
             I = torch.from_numpy(image).unsqueeze(0)
         except Exception as e:
             print("----->Problem during resize:{}".format(e))
-            self.stop_camera = True
+            # self.stop_camera = True
+            return None, None
+
+        return I, original_img
+
+    def predict(self, img):
+
+        test_output = self.model(Variable(img))
+        max_val, idx = torch.max(test_output, 1)
+        result = test_output.data.cpu().numpy()[0]
+        result = np.interp(result, (result.min(), result.max()), (0, +1))
+        return result, max_val, idx.data.cpu().numpy()[0]
+
+
+class ImgEmotionDetector(object):
+    emo_list = ["neutral", "anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"]
+
+    def __init__(self):
+        self.cv2 = cv2
+
+        self.out_file = './static/captured_images/processed'
+
+        self.out_file += "/pic_{}.jpeg"
+
+        self.faceCascade = self.cv2.CascadeClassifier('./static/casscade_model/casscade.xml')
+        self.model = self.load_model()
+        self.dlib_detector, self.dlib_predictor = self.load_dlib()
+        self.font = self.cv2.FONT_HERSHEY_SIMPLEX
+        self.feelings_faces = []
+        # append the list with the emoji images
+        for index, emotion in enumerate(self.emo_list):
+            self.feelings_faces.append(self.cv2.imread('./static/images/emojis/' + emotion + '.png', -1))
+
+    def __del__(self):
+        print("Exiting...")
+
+    def stop(self):
+        print("Exiting...")
+
+    def load_model(self):
+        model_p2 = mpe.ExpNet_p2(useCuda=False, gpuDevice=0)
+        model_p2.load_state_dict(torch.load(os.path.join('./services/core/model', 'expnet_p2.pt'),
+                                            map_location=lambda storage, loc: storage))
+
+        return model_p2
+
+    def load_dlib(self):
+        detector = dlib.get_frontal_face_detector()
+        predictor = dlib.shape_predictor("services/core/utils/pretrained_model/shape_predictor_68_face_landmarks.dat")
+        return detector, predictor
+
+    def get_frame(self, image):
+
+        model_image, cropped_image = self.format_image(image)
+        if model_image is not None:
+            result, max_val, max_index = self.predict(model_image)
+
+            if result is not None:
+                # write the different emotions and have a bar to indicate probabilities for each class
+                for index, emotion in enumerate(self.emo_list):
+                    self.cv2.putText(image, emotion, (10, index * 20 + 20), self.font, 0.5, (0, 255, 0), 1)
+                    self.cv2.rectangle(image, (130, index * 20 + 10),
+                                       (130 + int(result[index] * 100), (index + 1) * 20 + 4),
+                                       (255, 0, 0), -1)
+
+                self.cv2.putText(image, self.emo_list[max_index], (10, 360), self.font, 2, (255, 255, 255), 2,
+                                 self.cv2.LINE_AA)
+
+                face_image = self.feelings_faces[max_index]
+
+                for c in range(0, 3):
+                    image[200:320, 10:130, c] = face_image[:, :, c] * (face_image[:, :, 3] / 255.0) + image[200:320,
+                                                                                                      10:130,
+                                                                                                      c] * (
+                                                        1.0 - face_image[:, :, 3] / 255.0)
+
+                gray = self.cv2.cvtColor(image, self.cv2.COLOR_BGR2GRAY)
+
+                faces = self.faceCascade.detectMultiScale(
+                    gray,
+                    scaleFactor=1.3,
+                    minNeighbors=5,
+                    minSize=(30, 30),
+                    flags=self.cv2.CASCADE_SCALE_IMAGE
+                )
+
+                if len(faces) > 0:
+                    # initialize the first face as having maximum area.
+                    max_area_face = faces[0]
+                    for face in faces:  # (x,y,w,h)
+                        if face[2] * face[3] > max_area_face[2] * max_area_face[3]:
+                            max_area_face = face
+
+                    (x, y, w, h) = max_area_face
+                    image = self.cv2.rectangle(image, (x, y - 50), (x + w, y + h + 10), (255, 0, 0), 2)
+
+                    self.cv2.imwrite(
+                        self.out_file.format(str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%s'))), image)
+                else:
+                    print("No face!!!")
+            else:
+                print("No Emotion Prediction!!!.")
+        else:
+            print("Some issue in image format!!!")
+
+        try:
+            return self.cv2.imencode('.jpg', image)[1].tobytes()
+        except Exception as e:
+            print("Exception while returning image as byte!!!---> {}".format(e))
+            # self.stop_camera = True
+            return bytearray()
+
+    def format_image(self, image):
+        try:
+            image = iae.img_align_modified(image, self.dlib_detector, self.dlib_predictor)
+            original_img = image
+            image = self.cv2.cvtColor(image, self.cv2.COLOR_RGB2BGR)
+            image = self.cv2.resize(image, (96, 96), interpolation=self.cv2.INTER_LINEAR)
+            image = np.transpose(image, (2, 0, 1))
+            image = image.astype(np.float32) / 255.0
+            I = torch.from_numpy(image).unsqueeze(0)
+        except Exception as e:
+            print("----->Problem during resize:{}".format(e))
+            # self.stop_camera = True
             return None, None
 
         return I, original_img

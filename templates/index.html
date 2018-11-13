@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Prediction</title>
-
-    <!--<script type="text/javascript" src="../static/library/js/plotly.min.js"></script>-->
-
+    <script src="../static/library/jpeg_camera/jpeg_camera_with_dependencies.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="../static/library/js/jquery.min.js"></script>
     <script type="text/javascript" src="../static/library/js/app.js"></script>
     <link rel="stylesheet" type="text/css" href="../static/library/css/app.css"/>
@@ -13,53 +11,14 @@
 <body background="../static/images/background.jpg">
 
 <div class="content">
-    <!--<div>-->
-        <!--<fieldset>-->
-            <!--<legend>Upload Your Beautiful Pic:</legend>-->
-            <span>Real time emotion detection on video: </span>
 
-            <div id="container">
-                <img id="bg" src="{{ url_for('video_feed') }}">
-            </div>
-            <button id="stop" class="btn">Stop</button>
-            <br/>
-            <!--<form action="/upload_files" method="POST" enctype=multipart/form-data class="legend">-->
+    <span>Real time emotion detection on video: </span>
 
-            <!--<span>Upload: </span>-->
-            <!--<input type="file" name="data_file"/><br/>-->
-            <!--<span>Capture an Image: </span>-->
-            <!--<input type="file" name="data_file" accept="image/*" capture="camera">-->
-            <!--<span>Real time emotion detection on video: </span>-->
-            <!--&lt;!&ndash;<button id="stop">Stop</button>&ndash;&gt;-->
-            <!--&lt;!&ndash;<div id="container">&ndash;&gt;-->
-            <!--&lt;!&ndash;&lt;!&ndash;<video autoplay="true" id="videoElement">&ndash;&gt;&ndash;&gt;-->
-
-            <!--&lt;!&ndash;&lt;!&ndash;</video>&ndash;&gt;&ndash;&gt;-->
-
-            <!--&lt;!&ndash;<img id="bg" src="{{ url_for('video_feed') }}">&ndash;&gt;-->
-            <!--&lt;!&ndash;</div>&ndash;&gt;-->
-            <!--<br/>-->
-            <!--<input class="submit_btn" type="submit" value="Upload Pic!"/>-->
-
-            <!--</form>-->
-            <!--<fieldset>-->
-            <!--<legend>Uploaded Pics:</legend>-->
-            <!--<div>-->
-            <!--<ul class="uploaded_file_list">-->
-            <!--</ul>-->
-            <!--<button id="clear_images" class="clr_btn" type="button" value="Clear Images!"-->
-            <!--onclick="clear_images()">Clear Images!-->
-            <!--</button>-->
-            <!--</div>-->
-            <!--</fieldset>-->
-        <!--</fieldset>-->
-    <!--</div>-->
-    <!--<div>-->
-
-        <!--<button id="fetch_emotion" class="btn" type="button" value="Fetch Emotion!">Fetch Emotion!</button>-->
-        <!--<ul class="emotions_list">-->
-        <!--</ul>-->
-    <!--</div>-->
+    <div id="container">
+        <img id="bg" src="{{ url_for('video_feed') }}">
+    </div>
+    <button id="stop" class="btn">Stop</button>
+    <br/>
 </div>
 </body>
 </html>

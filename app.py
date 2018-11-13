@@ -1,95 +1,46 @@
-import services.core.Prediction_CPU as prediction
-import services.file_upload_service as file_upload_service
-from services.core.camera import VideoCamera
-from flask import Flask, send_file, render_template, redirect, flash, request, url_for, jsonify, abort, Response
-from json import dumps
+from services.core.camera import ImgEmotionDetector
+from flask import Flask, render_template
+
+import numpy as np
+import cv2
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
-
-# @app.after_request
-# def add_header(r):
-#     """
-#     Add headers to both force latest IE rendering engine or Chrome Frame,
-#     and also to cache the rendered page for 10 minutes.
-#     """
-#     r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-#     r.headers["Pragma"] = "no-cache"
-#     r.headers["Expires"] = "0"
-#     r.headers['Cache-Control'] = 'public, max-age=0'
-#
-#     return r
+global imgEmotionDetector
+imgEmotionDetector = ImgEmotionDetector()
 
 
 @app.route('/')
 def index():
-    return render_template('index.html', data='Emotion Detection Web (A DL4CV Project)!')
+    return render_template('camcorder.html', data='Emotion Detection Web (A DL4CV Project)!')
 
 
-@app.route('/upload_files', methods=['POST'])
-def upload_files():
-    file = request.files
-    file_part = file['data_file']
-
-    file_upload_service_obj = file_upload_service.File_Upload_Service()
-    file_upload_service_obj.upload_file(file=file_part)
-
-    return redirect(url_for('index'))
+def predict_img(frame):
+    global imgEmotionDetector
+    frame = imgEmotionDetector.get_frame(frame)
+    return frame
 
 
-@app.route('/file_list', methods=['GET'])
-def file_list():
-    file_upload_service_obj = file_upload_service.File_Upload_Service()
-    files = file_upload_service_obj.get_file_list()
-    return jsonify(files) if len(files) is not 0 else jsonify(["No File Found!"])
+@socketio.on('image_feed_')
+def image_feed_(message):
+    filestr = message['data']
+    npimg = np.frombuffer(filestr, np.uint8)
+    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+    ret_val = predict_img(img)
+    emit('video_stream', {'data': ret_val})
 
 
-@app.route('/clear_files', methods=['GET'])
-def clear_files():
-    file_upload_service.File_Upload_Service.move_all_files()
-
-    return jsonify(["Uploaded images successfully removed!!"])
+@socketio.on('connect')
+def test_connect():
+    emit('message', {'data': 'Connected'})
 
 
-@app.route('/fetch_emotion', methods=['POST', 'GET'])
-def process():
-    try:
-        res = prediction.Execute()
-        return jsonify(res) if len(res) is not 0 else jsonify(dict(err="No File to Process!!"))
-    except Exception as e:
-        error_message = dumps({'Message': "Some Error on the Server! Inform the developer! "
-                                          "Click Clear Images button and try again with a different pic."})
-        abort(Response(error_message, 401))
-
-
-def gen(camera):
-    global video_camera
-    video_camera = camera
-
-    while True:
-        if video_camera.stop_camera:
-            break
-
-        frame = video_camera.get_frame()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
-
-    video_camera.stop()
-    print("camera open??==", camera.is_camera_open)
-
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen(VideoCamera()),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/stop', methods=['POST'])
-def stop():
-    global video_camera
-    video_camera.stop_camera = True
-    return jsonify(["Camera has been stopped!!!"])
+@socketio.on('disconnect')
+def test_disconnect():
+    print('Client disconnected')
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+    socketio.run(app, host='0.0.0.0', port=5000)

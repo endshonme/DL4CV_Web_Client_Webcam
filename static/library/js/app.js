@@ -35,17 +35,20 @@ $(document).ready(function () {
     //             alert("Something went wrong!");
     //         });
     // }
+    //
 
-    let buttonStop = document.getElementById("stop");
-    buttonStop.onclick = function () {
-        buttonStop.disabled = true;
 
-        // XMLHttpRequest
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", "/stop");
-        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xhr.send(JSON.stringify({status: "false"}));
-    };
+    // ####################################################### LOOK FOR IT
+    // let buttonStop = document.getElementById("stop");
+    // buttonStop.onclick = function () {
+    //     buttonStop.disabled = true;
+    //
+    //     // XMLHttpRequest
+    //     let xhr = new XMLHttpRequest();
+    //     xhr.open("POST", "/stop");
+    //     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    //     xhr.send(JSON.stringify({status: "false"}));
+    // };
 });
 
 // function clear_images() {
